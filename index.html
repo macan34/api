@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pengguna</title>
+
+    <style>
+        :root {
+            --primary: #0f766e;
+            --primary-dark: #115e59;
+            --accent: #f59e0b;
+            --text: #172033;
+            --muted: #6b7280;
+            --border: #dce5e8;
+            --surface: rgba(255, 255, 255, .94);
+            --background: #edf5f3;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 8% 5%, rgba(245, 158, 11, .18), transparent 28%),
+                radial-gradient(circle at 92% 18%, rgba(15, 118, 110, .16), transparent 30%),
+                var(--background);
+            margin: 0;
+            padding: 32px 16px;
+            min-height: 100vh;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 26px;
+            letter-spacing: -.3px;
+        }
+
+        .eyebrow { margin: 0 0 6px; color: var(--primary); font-size: 12px; font-weight: bold; letter-spacing: 1.4px; text-transform: uppercase; }
+        .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+
+        .container {
+            max-width: 1120px;
+            margin: auto;
+            background: var(--surface);
+            padding: 28px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 18px 45px rgba(30, 70, 67, .1);
+            backdrop-filter: blur(8px);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 26px;
+        }
+
+        button {
+            padding: 9px 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background-color .2s, opacity .2s;
+        }
+
+        button:hover { opacity: .9; }
+        button:disabled { cursor: wait; opacity: .6; }
+        .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 5px 12px rgba(15, 118, 110, .2); }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: #e8eff0; color: var(--text); }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .table-wrapper { overflow-x: auto; }
+
+        .pagination {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .pagination.visible { display: flex; }
+        .pagination-buttons { display: flex; gap: 8px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 720px;
+            background: var(--surface);
+        }
+
+        th {
+            background: #e4f1ef;
+            color: #145c57;
+            padding: 12px;
+            border-bottom: 2px solid #cce4e0;
+            text-align: left;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tbody tr:hover { background: #f8fafc; }
+
+        .user-name { font-weight: bold; }
+        .user-email { color: var(--muted); font-size: 13px; }
+        .actions { display: flex; justify-content: center; gap: 8px; white-space: nowrap; }
+        .icon-button { width: 36px; height: 34px; padding: 0; border: 1px solid transparent; font-size: 18px; line-height: 1; }
+        .icon-button.edit { background: #fff4d6; color: #a16207; border-color: #fde7a9; }
+        .icon-button.delete { background: #ffe6e3; color: #c24136; border-color: #fecaca; }
+        .icon-button:hover { transform: translateY(-1px); }
+
+        .center{
+            text-align:center;
+        }
+
+        .loading, .empty {
+            text-align: center;
+            color: var(--muted);
+            padding: 28px;
+        }
+
+        .modal { display: none; position: fixed; z-index: 10; inset: 0; padding: 20px; background: rgba(15, 40, 38, .55); }
+        .modal-content { background: #fff; margin: 5vh auto; padding: 26px; width: min(100%, 500px); border-top: 5px solid var(--accent); border-radius: 12px; box-shadow: 0 16px 40px rgba(15, 23, 42, .2); }
+        .modal-content h3 { margin: 0 0 20px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-group { margin-bottom: 0; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; }
+        .form-group input:focus { outline: 2px solid #bfdbfe; border-color: var(--primary); }
+        .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
+
+        @media (max-width: 600px) {
+            body { padding: 16px 10px; }
+            .container { padding: 20px 14px; }
+            .header { align-items: stretch; flex-direction: column; }
+            .header button { width: 100%; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full { grid-column: auto; }
+            .pagination { align-items: stretch; flex-direction: column; }
+            .pagination-buttons button { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <p class="eyebrow">Panel administrasi</p>
+            <h2>Data Pengguna</h2>
+            <p class="subtitle">Kelola informasi pengguna dengan mudah.</p>
+        </div>
+        <button class="btn-primary" type="button" onclick="bukaModalTambah()">+ Tambah Data</button>
+    </div>
+
+    <div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th width="70">NO / ID</th>
+                <th>Nama</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Alamat</th>
+                <th width="150" class="center">Aksi</th>
+            </tr>
+        </thead>
+
+        <tbody id="hasil">
+            <tr>
+                <td colspan="6" class="loading">Memuat data...</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+    <div id="pagination" class="pagination">
+        <span id="pageInfo"></span>
+        <div class="pagination-buttons">
+            <button id="previousButton" class="btn-secondary" type="button" onclick="ubahHalaman(-1)">Sebelumnya</button>
+            <button id="nextButton" class="btn-primary" type="button" onclick="ubahHalaman(1)">Berikutnya</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Form Add/Edit -->
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">Tambah Data User</h3>
+        <form id="userForm">
+            <input type="hidden" id="userId">
+            <div class="form-grid">
+            <div class="form-group full">
+                <label>Nama:</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group full">
+                <label>Email:</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group full">
+                <label>Nomor HP (Phone):</label>
+                <input type="tel" id="phone" placeholder="Contoh: 0812-3456-7890">
+            </div>
+            <div class="form-group">
+                <label>Jalan (Street):</label>
+                <input type="text" id="street">
+            </div>
+            <div class="form-group">
+                <label>Suite / Apt:</label>
+                <input type="text" id="suite">
+            </div>
+            <div class="form-group">
+                <label>Kota (City):</label>
+                <input type="text" id="city">
+            </div>
+            <div class="form-group">
+                <label>Kode Pos (Zipcode):</label>
+                <input type="text" id="zipcode">
+            </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="tutupModal()">Batal</button>
+                <button type="submit" class="btn-primary" id="saveButton">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const apiUrl = "http://localhost/api/data_json.php";
+const itemsPerPage = 10;
+let listData = [];
+let currentPage = 1;
+
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>'"]/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;"
+    })[character]);
+}
+
+async function request(url, options) {
+    const response = await fetch(url, options);
+    const result = await response.json();
+    if (!response.ok || result.status === "error") {
+        throw new Error(result.message || "Terjadi kesalahan pada server.");
+    }
+    return result;
+}
+
+function renderData() {
+    const hasil = document.getElementById("hasil");
+    let html = "";
+    const totalPages = Math.ceil(listData.length / itemsPerPage);
+
+    if (listData.length === 0) {
+        html = `<tr><td colspan="6" class="empty">Belum ada data pengguna.</td></tr>`;
+    } else {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        listData.slice(startIndex, startIndex + itemsPerPage).forEach(item => {
+                const address = item.address || {};
+                html += `
+                <tr>
+                    <td class="center">${escapeHtml(item.id)}</td>
+                    <td class="user-name">${escapeHtml(item.name)}</td>
+                    <td class="user-email">${escapeHtml(item.email)}</td>
+                    <td class="user-phone">${escapeHtml(item.phone || "-")}</td>
+                    <td>
+                        ${escapeHtml(address.street)}, ${escapeHtml(address.suite)},
+                        ${escapeHtml(address.city)}, ${escapeHtml(address.zipcode)}
+                    </td>
+                    <td class="center">
+                        <div class="actions">
+                            <button class="icon-button edit" type="button" title="Edit pengguna" aria-label="Edit pengguna" onclick="bukaModalEdit(${item.id})">&#9998;</button>
+                            <button class="icon-button delete" type="button" title="Hapus pengguna" aria-label="Hapus pengguna" onclick="hapusData(${item.id})">&#128465;</button>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            });
+    }
+
+    hasil.innerHTML = html;
+    const pagination = document.getElementById("pagination");
+    pagination.classList.toggle("visible", totalPages > 1);
+    if (totalPages > 1) {
+        document.getElementById("pageInfo").innerText = `Halaman ${currentPage} dari ${totalPages}`;
+        document.getElementById("previousButton").disabled = currentPage === 1;
+        document.getElementById("nextButton").disabled = currentPage === totalPages;
+    }
+}
+
+function ubahHalaman(change) {
+    const totalPages = Math.ceil(listData.length / itemsPerPage);
+    currentPage = Math.min(Math.max(currentPage + change, 1), totalPages);
+    renderData();
+}
+
+// Load data from the API, then render the active page.
+async function loadData() {
+    const hasil = document.getElementById("hasil");
+    hasil.innerHTML = '<tr><td colspan="6" class="loading">Memuat data...</td></tr>';
+    try {
+        const data = await request(apiUrl);
+        listData = Array.isArray(data) ? data : [];
+        const totalPages = Math.max(1, Math.ceil(listData.length / itemsPerPage));
+        currentPage = Math.min(currentPage, totalPages);
+        renderData();
+    } catch (error) {
+        hasil.innerHTML = `
+        <tr>
+            <td colspan="6" class="empty" style="color:#b91c1c">
+                ${escapeHtml(error.message)}
+            </td>
+        </tr>`;
+        document.getElementById("pagination").classList.remove("visible");
+        console.error(error);
+    }
+}
+
+// Kontrol Modal
+function bukaModalTambah() {
+    document.getElementById("modalTitle").innerText = "Tambah Data User";
+    document.getElementById("userForm").reset();
+    document.getElementById("userId").value = "";
+    document.getElementById("userModal").style.display = "block";
+}
+
+function bukaModalEdit(id) {
+    document.getElementById("modalTitle").innerText = "Edit Data User";
+    const user = listData.find(u => u.id == id);
+    if(user) {
+        document.getElementById("userId").value = user.id;
+        document.getElementById("name").value = user.name;
+        document.getElementById("email").value = user.email;
+        document.getElementById("phone").value = user.phone || "";
+        const address = user.address || {};
+        document.getElementById("street").value = address.street || "";
+        document.getElementById("suite").value = address.suite || "";
+        document.getElementById("city").value = address.city || "";
+        document.getElementById("zipcode").value = address.zipcode || "";
+        document.getElementById("userModal").style.display = "block";
+    }
+}
+
+function tutupModal() {
+    document.getElementById("userModal").style.display = "none";
+}
+
+window.addEventListener("click", event => {
+    if (event.target === document.getElementById("userModal")) tutupModal();
+});
+
+window.addEventListener("keydown", event => {
+    if (event.key === "Escape") tutupModal();
+});
+
+// Proses Simpan (Tambah / Edit)
+document.getElementById("userForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const id = document.getElementById("userId").value;
+    const action = id ? "edit" : "add";
+
+    const payload = {
+        action: action,
+        id: id,
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        street: document.getElementById("street").value,
+        suite: document.getElementById("suite").value,
+        city: document.getElementById("city").value,
+        zipcode: document.getElementById("zipcode").value
+    };
+
+    const saveButton = document.getElementById("saveButton");
+    saveButton.disabled = true;
+    try {
+        const result = await request(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        alert(result.message);
+        tutupModal();
+        await loadData();
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        saveButton.disabled = false;
+    }
+});
+
+// Proses Hapus Data
+function hapusData(id) {
+    if(confirm("Apakah Anda yakin ingin menghapus data ini?")) {
+        request(`${apiUrl}?id=${encodeURIComponent(id)}`, { method: "DELETE" })
+            .then(result => {
+                alert(result.message);
+                loadData();
+            })
+            .catch(error => alert(error.message));
+    }
+}
+
+// Panggil fungsi load data saat halaman dibuka
+loadData();
+</script>
+
+</body>
+</html>
